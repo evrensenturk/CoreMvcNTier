@@ -7,6 +7,7 @@ using CoreMvcNTier.Business.Concrete;
 using CoreMvcNTier.DataAccess.Abstract;
 using CoreMvcNTier.DataAccess.Concrete;
 using CoreMvcNTier.DataAccess.Concrete.EntityFrameWork;
+using CoreMvcNTier.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -38,9 +39,14 @@ namespace CoreMvcNTier
             services.AddDbContext<NTierContext>(
                 options => options.UseSqlServer(Configuration["database:connection"])
                 );
-                
 
-              
+
+            services.AddSession(options =>
+            {
+                // Set a short timeout for easy testing.
+                options.IdleTimeout = TimeSpan.FromSeconds(600);
+                options.Cookie.HttpOnly = true;
+            });
             services.AddScoped<IProductDal, EFProductDal>();
             services.AddScoped<IProductService, ProductManager>();
 
@@ -60,8 +66,9 @@ namespace CoreMvcNTier
             }
 
             app.UseStaticFiles();
+            app.UseTheme(env.ContentRootPath);
             app.UseCookiePolicy();
-
+            app.UseSession();
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
